@@ -10,8 +10,8 @@ type Multiplicity = Float
 type Item = (Name, Weight, Multiplicity)
 type Dose = Float
 type Database = Map.Map Name Carbs
-type CarbRatio = Int
-type CarbRatios = Map.Map Name CarbRatio
+type InsulinCarbRatio = Int
+type InsulinCarbRatios = Map.Map Name InsulinCarbRatio
 type Meal = [Item]
 data Result a b = Ok a | Err b
 
@@ -23,7 +23,7 @@ sumCarbs ((name, weight, mult):items) db = case (Map.lookup name db, sumCarbs it
   (Nothing, Ok _) -> Err [name]
   (Nothing, Err names) -> Err (name:names)
 
-calcDose :: Carbs -> CarbRatio -> Dose
+calcDose :: Carbs -> InsulinCarbRatio -> Dose
 calcDose sum carb_ratio = sum / fromIntegral carb_ratio
 
 getItems :: IO [Item]
@@ -46,22 +46,22 @@ getItems = do
      
 main :: IO ()
 main = do
-  putStr "Carb ratio name: "
+  putStr "Insulin to carbs ratio: "
   hFlush stdout
   input <- getLine
-  case Map.lookup input carb_ratios of
-    Just carb_ratio -> do
-      putStrLn "Enter items (<name> <weight> <multiplicity>). Type :d to finish."
+  case Map.lookup input insulin_carb_ratios of
+    Just insulin_carb_ratio -> do
+      putStrLn "Enter items (<name> <weight> <multiplicity>). Type :d to finish:"
       meal <- getItems
       case sumCarbs meal db of
         Ok sum -> do
           printf "Total carbs: %.2fg\n" sum
-          printf "Calculated insulin dose: %.2f units\n" (calcDose sum carb_ratio)
+          printf "Calculated insulin dose: %.2f units\n" (calcDose sum insulin_carb_ratio)
         Err items -> putStrLn $ "Items not found in database: " ++ show items
-    Nothing -> putStrLn $ "Carb ratio with name '" ++ input ++ "' has not been set"
+    Nothing -> putStrLn $ "Insulin to carbs ratio with name '" ++ input ++ "' has not been set"
 
 -- Database and carb ratios temporarily in code while prototyping
 db :: Database
 db = Map.fromList [("Apple", 10), ("Banana", 20.9), ("Orange", 10)]
-carb_ratios :: CarbRatios
-carb_ratios = Map.fromList [("Breakfast", 7), ("Dinner", 11), ("Tea", 10)]
+insulin_carb_ratios :: InsulinCarbRatios
+insulin_carb_ratios = Map.fromList [("Breakfast", 7), ("Dinner", 11), ("Tea", 10)]
